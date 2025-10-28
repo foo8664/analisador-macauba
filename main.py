@@ -4,6 +4,15 @@ from PIL import Image
 from colorsys import rgb_to_hls
 from sys import argv
 
+def scan_recursive(path):
+    if not os.path.exists(path):
+        raise ValueError("File does not exist")
+    elif os.path.isfile(path):
+        yield scan(path)
+    elif os.path.isdir(path):
+        for newpath in os.listdir(path):
+            yield from scan_recursive(os.path.join(path, newpath))
+
 def scan(path):
     try:
         img = Image.open(path)
@@ -36,4 +45,5 @@ def scan(path):
     return {'stats':stats, 'img':img, 'imgmap':imgmap}
 
 if __name__ == "__main__":
-    print(scan(argv[1]))
+    for s in scan_recursive(argv[1]):
+        print(s)
