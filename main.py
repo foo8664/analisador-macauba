@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 import os
 import argparse
+from shlex import split as shsplit
+from sys import argv
 from PIL import Image
 from colorsys import rgb_to_hls
 
-# Returns a dictionary with the arguments passed to the program
-def get_args():
+# Returns a dictionary of the parsed arguments, pass None as an argument to
+# default to sys.argv
+def get_args(argv):
     parser = argparse.ArgumentParser(description='Analisa folhas de macaúba',
                                        add_help=False)
     parser.add_argument('-h', '--help', action='help',
@@ -17,7 +20,7 @@ def get_args():
                             ' deve estar no formato <altura>,<comprimento>, onde' +
                             ' os dois são valores reais. A medida é a mesma da' +
                             ' altura e comprimento')
-    map = vars(parser.parse_args())
+    map = vars(parser.parse_args(argv))
     if map['tamanho'] and len(map['tamanho'].split(',')) == 2:
         nums = map['tamanho'].split(',')
         map['tamanho'] = float(nums[0]) * float(nums[1])
@@ -40,7 +43,7 @@ def display(stat, args):
     print('saudável: {:.3f}%'.format(stat['good'] / pixtot * 100))
     print('doente: {:.3f}%'.format(stat['bad'] / pixtot * 100))
 
-    if 'tamanho' in args:
+    if args['tamanho']:
         print('Área saúdavel: {:.3f}'.format(stat['good'] / size * args['tamanho']))
         print('Área doente: {:.3f}'.format(stat['bad'] / size * args['tamanho']))
     print()
@@ -55,11 +58,11 @@ def scan(path):
         return
     imgmap = Image.new(img.mode, img.size)
 
-    # scans image to fill the img map
+    # scans image ands fills the map of it
     stats = {'good':0, 'bad':0}
     for x in range(img.size[0]):
         for y in range(img.size[1]):
-            pixel = img.getpixel((x, y)) # get's pixel (RGB)
+            pixel = img.getpixel((x, y)) # get's pixel's RGB values
             try:
                 hsl_pixel = rgb_to_hls(pixel[0], pixel[1], pixel[2])
             except (ZeroDivisionError, ValueError):
@@ -78,7 +81,23 @@ def scan(path):
     return {'good':stats['good'], 'bad':stats['bad'],
             'path':path, 'img':img, 'imgmap':imgmap}
 
+# Runs in interactive mode
+def run_interactive():
+    while True:
+        cmd = input('cmd: ').strip()
+        if cmd.lower() == "sair":
+            exit()
+        args = get_args(shsplit(cmd))
+        for st in scan_recursive(args['path']):
+            display(st, args)
+        print()
+
 if __name__ == '__main__':
-    args = get_args()
-    for st in scan_recursive(args['path']):
-        display(st, args)
+    try:
+        if len(argv) == 1:
+            run_interactive()
+        args = get_args(None)
+        for st in scan_recursive(args['path']):
+            display(st, args)
+    except KeyboardInterrupt:
+        exit('\n')
