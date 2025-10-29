@@ -1,12 +1,21 @@
 #!/usr/bin/env python
 import os
+import argparse
 from PIL import Image
 from colorsys import rgb_to_hls
-from sys import argv
+
+def get_args():
+    parser = argparse.ArgumentParser(description='Analisa folhas de macaúba',
+                                       add_help=False)
+    parser.add_argument('-h', '--help', action='help',
+                        help='Mostra essa mensagem e fecha o programa')
+    parser.add_argument('path', default='.',
+                        help='Caminho para arquivo/pasta a ser analisado')
+    return vars(parser.parse_args())
 
 def scan_recursive(path):
     if not os.path.exists(path):
-        raise ValueError("File does not exist")
+        raise ValueError('File does not exist')
     elif os.path.isfile(path):
         yield scan(path)
     elif os.path.isdir(path):
@@ -44,6 +53,6 @@ def scan(path):
 
     return {'stats':stats, 'img':img, 'imgmap':imgmap}
 
-if __name__ == "__main__":
-    for s in scan_recursive(argv[1]):
-        print(s)
+if __name__ == '__main__':
+    args = get_args()
+    print(args)
