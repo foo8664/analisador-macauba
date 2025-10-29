@@ -22,6 +22,14 @@ def scan_recursive(path):
         for newpath in os.listdir(path):
             yield from scan_recursive(os.path.join(path, newpath))
 
+def display(stat):
+    size = stat['good'] + stat['bad']
+    print('imagem {0}:'.format(stat['path']))
+    print('saudável: {:.3f}%'.format(stat['good'] / size * 100))
+    print('doente: {:.3f}%\n'.format(stat['bad'] / size * 100))
+    stat['img'].close()
+    stat['imgmap'].close()
+
 def scan(path):
     try:
         img = Image.open(path)
@@ -51,8 +59,10 @@ def scan(path):
             else: # none
                 imgmap.putpixel((x,y), value=(0,0,255))
 
-    return {'stats':stats, 'img':img, 'imgmap':imgmap}
+    return {'good':stats['good'], 'bad':stats['bad'],
+            'path':path, 'img':img, 'imgmap':imgmap}
 
 if __name__ == '__main__':
     args = get_args()
-    print(args)
+    for st in scan_recursive(args['path']):
+        display(st)
