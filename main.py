@@ -11,7 +11,7 @@ from colorsys import rgb_to_hls
 def get_args(argv):
     parser = argparse.ArgumentParser(description='Analisa folhas de macaúba',
                                        add_help=False)
-    parser.add_argument('-h', '--help', action='help',
+    parser.add_argument('-h', '--help', '--ajuda', action='help',
                         help='Mostra essa mensagem e fecha o programa')
     parser.add_argument('path', default='.',
                         help='Caminho para arquivo/pasta a ser analisado')
@@ -24,10 +24,18 @@ def get_args(argv):
                         help='Mostra todas as imagens processadas')
     parser.add_argument('--mostrar-mapas', action='store_true',
                         help='Mostra o mapa das imagens processadas')
+    parser.add_argument('--nao-mostrar-imagens', action='store_true',
+                        help='Nao pergunta sobre mostrar as imagens processadas')
+    parser.add_argument('--nao-mostrar-mapas', action='store_true',
+                        help='Nao pergunta sobre mostrar os mapas processados')
     map = vars(parser.parse_args(argv))
     if map['tamanho'] and len(map['tamanho'].split(',')) == 2:
         nums = map['tamanho'].split(',')
         map['tamanho'] = float(nums[0]) * float(nums[1])
+    if map['nao_mostrar_imagens'] and map['mostrar_imagens']:
+        exit('Opções "--mostrar-imagens" e "--nao-mostrar-imagens" são incompativeis')
+    if map['nao_mostrar_mapas'] and map['mostrar_mapas']:
+        exit('Opções "--nao-mostrar-mapas" e "--mostrar-mapas" são incompativeis')
     return map
 
 def scan_recursive(path):
@@ -84,9 +92,9 @@ def display(stat, args):
     if args['tamanho']:
         print('Área saúdavel: {:.3f}'.format(stat['good'] / size * args['tamanho']))
         print('Área doente: {:.3f}'.format(stat['bad'] / size * args['tamanho']))
-    if args['mostrar_imagens'] or (args['interativo'] and input('mostrar imagem (s/n)?: ').strip().lower() == 's'):
+    if not args['nao_mostrar_imagens'] and (args['mostrar_imagens'] or (args['interativo'] and input('mostrar imagem (s/n)?: ').strip().lower() == 's')):
         viewer.show(stat['img'])
-    if args['mostrar_mapas'] or (args['interativo'] and input('mostrar mapa (s/n)?: ').strip().lower() == 's'):
+    if not args['nao_mostrar_mapas'] and (args['mostrar_mapas'] or (args['interativo'] and input('mostrar mapa (s/n)?: ').strip().lower() == 's')):
         viewer.show(stat['imgmap'])
     print()
 
